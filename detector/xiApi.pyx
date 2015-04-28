@@ -120,10 +120,19 @@ cdef class Detector:
     def get_image(self):
         cdef XI_IMG image
         e = xiStartAcquisition(self.handle)
-        handle_error(e, "Detector.get_image().xiStartAcquisition")
+        handle_error(e, "Detector.get_image().xiStartAcquisition()")
         e = xiGetImage(self.handle, Detector.TIMEOUT, &image)
-        handle_error(e, "Detector.get_image()")
+        handle_error(e, "Detector.get_image().xiGetImage()")
         #return image.height, image.width, image.bp
+        return image.bp[0]
+
+    def enable_cooling(self):
+        e = xiSetParamInt(self.handle, XI_PRM_COOLING, XI_ON)
+        handle_error(e, "Detector.enable_cooling()")
+
+    def disable_cooling(self):
+        e = xiSetParamInt(self.handle, XI_PRM_COOLING, XI_OFF)
+        handle_error(e, "Detector.disable_cooling()")
 
     def __dealloc__(self):
         e = xiCloseDevice(self.handle)
