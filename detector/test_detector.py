@@ -8,7 +8,6 @@ d.set_exposure(100)
 d.enable_cooling()
 res = d.get_image()
 
-np_res = np.array(res)
 
 plt.figure()
 plt.imshow(res, cmap=plt.cm.gray)

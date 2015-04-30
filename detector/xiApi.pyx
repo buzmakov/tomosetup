@@ -135,6 +135,17 @@ cdef class Detector:
 
         return img
 
+    cdef make_image2(self, XI_IMG image):
+        number_of_pixels = (image.width + image.padding_x / 2) * image.height
+        size = number_of_pixels * 2
+        img = numpy.empty(shape=(image.height, image.width+ image.padding_x / 2), dtype = 'uint16')
+        i = 0
+        for h in range(img.shape[0]):
+            for w in range(img.shape[1]):
+                img[h,w]= (<numpy.uint16_t *>image.bp)[i]
+                i = i+1    
+        return img
+
     def get_image(self):
 
 
@@ -147,17 +158,7 @@ cdef class Detector:
             e = xiGetImage(self.handle, Detector.TIMEOUT, &image)
             handle_error(e, "Detector.get_image().xiGetImage()")
 
-        return self.make_image(image)    
-
-
-        print image.bp_size
-        print image.height, image.width
-        number_of_pixels = (image.width + image.padding_x / 2) * image.height
-        size = number_of_pixels * 2
-        res = numpy.empty(shape=(number_of_pixels,), dtype = 'uint16')
-        #res.data = <numpy.uint16_t *>image.bp
-        # memcpy(<void *>res.data, <void *>image.bp, 64)
-        return res
+        return self.make_image2(image)    
 
     def enable_cooling(self):
         e = xiSetParamInt(self.handle, XI_PRM_COOLING, XI_ON)
