@@ -4,7 +4,7 @@ import numpy as np
 import pylab as plt
 d = Detector()
 
-d.set_exposure(100)
+d.set_exposure(1000)
 d.enable_cooling()
 res = d.get_image()
 

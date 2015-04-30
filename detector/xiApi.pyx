@@ -154,10 +154,13 @@ cdef class Detector:
         handle_error(e, "Detector.get_image().xiStartAcquisition()")
         image.bp = NULL
         image.bp_size = 0
-        for i in range(5):
+        for i in range(2):
             e = xiGetImage(self.handle, Detector.TIMEOUT, &image)
             handle_error(e, "Detector.get_image().xiGetImage()")
 
+        e = xiStopAcquisition(self.handle)
+        handle_error(e, "Detector.get_image().xiStopAcquisition()")
+        
         return self.make_image2(image)    
 
     def enable_cooling(self):
