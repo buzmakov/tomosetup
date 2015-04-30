@@ -1,4 +1,7 @@
 from cxiapi cimport *
+from libc.string cimport memset, memchr, memcmp, memcpy, memmove
+import numpy
+cimport numpy
 
 error_codes = { XI_OK: "Function call succeeded",
                 XI_INVALID_HANDLE: "Invalid handle",
@@ -107,6 +110,9 @@ cdef class Detector:
         e = xiSetParamInt(self.handle, XI_PRM_IMAGE_DATA_FORMAT, XI_MONO16)
         handle_error(e, "Detector.__cinit__()")
 
+        e = xiSetParamInt(self.handle, XI_PRM_BUFFER_POLICY, XI_BP_SAFE);
+        handle_error(e, "Detector.__cinit__()")
+
     def set_exposure(self, exposure):
         e = xiSetParamInt(self.handle, XI_PRM_EXPOSURE, exposure * 1000)
         handle_error(e, "Detector.set_exposure()")
@@ -117,14 +123,41 @@ cdef class Detector:
         handle_error(e, "Detector.get_exposure()")
         return round(exposure_in_us / 1000)
 
+    cdef make_image(self, XI_IMG image):
+        img = [[] for i in range(image.height)]
+        i = 0
+        for h in range(image.height):
+            for w in range(image.width + image.padding_x / 2):
+                if (<numpy.uint16_t *>image.bp)[i] <= 10:
+                    print(i, (<numpy.uint16_t *>image.bp)[i])
+                img[h].append((<numpy.uint16_t *>image.bp)[i])
+                i += 1
+
+        return img
+
     def get_image(self):
+
+
         cdef XI_IMG image
         e = xiStartAcquisition(self.handle)
         handle_error(e, "Detector.get_image().xiStartAcquisition()")
-        e = xiGetImage(self.handle, Detector.TIMEOUT, &image)
-        handle_error(e, "Detector.get_image().xiGetImage()")
-        #return image.height, image.width, image.bp
-        return image.bp[0]
+        image.bp = NULL
+        image.bp_size = 0
+        for i in range(5):
+            e = xiGetImage(self.handle, Detector.TIMEOUT, &image)
+            handle_error(e, "Detector.get_image().xiGetImage()")
+
+        return self.make_image(image)    
+
+
+        print image.bp_size
+        print image.height, image.width
+        number_of_pixels = (image.width + image.padding_x / 2) * image.height
+        size = number_of_pixels * 2
+        res = numpy.empty(shape=(number_of_pixels,), dtype = 'uint16')
+        #res.data = <numpy.uint16_t *>image.bp
+        # memcpy(<void *>res.data, <void *>image.bp, 64)
+        return res
 
     def enable_cooling(self):
         e = xiSetParamInt(self.handle, XI_PRM_COOLING, XI_ON)
