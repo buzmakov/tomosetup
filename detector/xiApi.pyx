@@ -96,7 +96,7 @@ cdef void handle_error(return_code, func_name) except *:
 cdef class Detector:
 
     cdef HANDLE handle
-    TIMEOUT = 10000 # in ms
+    TIMEOUT = 30*1000 # in ms
     def __cinit__(self):
         cdef DWORD a
 

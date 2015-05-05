@@ -55,10 +55,11 @@ class Motor(object):
         return position['Position']
 
     def move_to_position(self, position):
-        py_command_move(self.device_id, position, 0)
+        py_command_move(self.device_id, int(position), 0)
 
         # waiting until motor rotated
-        while self.get_status()['speed'] != 0 or self.get_position() != position:
+        # TODO: check accuracy of positiooning
+        while self.get_status()['speed'] != 0 or abs(self.get_position()-position)>3:
             # print 'Current angle: {}'.format(self.get_position())
             time.sleep(0.1)
 
