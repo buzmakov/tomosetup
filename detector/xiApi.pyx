@@ -121,7 +121,7 @@ cdef class Detector:
         cdef int exposure_in_us
         e = xiGetParamInt(self.handle, XI_PRM_EXPOSURE, &exposure_in_us)
         handle_error(e, "Detector.get_exposure()")
-        return round(exposure_in_us / 1000)
+        return float(exposure_in_us) / 1000
 
     cdef make_image(self, XI_IMG image):
         img = [[] for i in range(image.height)]
@@ -147,20 +147,17 @@ cdef class Detector:
         return img
 
     def get_image(self):
-
-
         cdef XI_IMG image
         e = xiStartAcquisition(self.handle)
         handle_error(e, "Detector.get_image().xiStartAcquisition()")
         image.bp = NULL
-        image.bp_size = 0
-        for i in range(2):
-            e = xiGetImage(self.handle, Detector.TIMEOUT, &image)
-            handle_error(e, "Detector.get_image().xiGetImage()")
+        image.bp_size = 0    
+        e = xiGetImage(self.handle, Detector.TIMEOUT, &image)
+        handle_error(e, "Detector.get_image().xiGetImage()")
 
         e = xiStopAcquisition(self.handle)
         handle_error(e, "Detector.get_image().xiStopAcquisition()")
-        
+        #TODO: return other image parameters
         return self.make_image2(image)    
 
     def enable_cooling(self):
