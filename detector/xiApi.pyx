@@ -2,6 +2,7 @@ from cxiapi cimport *
 from libc.string cimport memset, memchr, memcmp, memcpy, memmove
 import numpy
 cimport numpy
+import time
 
 error_codes = { XI_OK: "Function call succeeded",
                 XI_INVALID_HANDLE: "Invalid handle",
@@ -113,9 +114,18 @@ cdef class Detector:
         e = xiSetParamInt(self.handle, XI_PRM_BUFFER_POLICY, XI_BP_SAFE);
         handle_error(e, "Detector.__cinit__()")
 
+        e = xiStartAcquisition(self.handle)
+        handle_error(e, "Detector.__cinit__().xiStartAcquisition()")
+
     def set_exposure(self, exposure):
+        e = xiStopAcquisition(self.handle)
+        handle_error(e, "Detector.set_exposure().xiStopAcquisition()")
+
         e = xiSetParamInt(self.handle, XI_PRM_EXPOSURE, exposure * 1000)
         handle_error(e, "Detector.set_exposure()")
+
+        e = xiStartAcquisition(self.handle)
+        handle_error(e, "Detector.set_exposure().xiStartAcquisition()")
 
     def get_exposure(self):
         cdef int exposure_in_us
@@ -132,18 +142,23 @@ cdef class Detector:
         memcpy(<void *> img.data, image.bp, size)
         return img
 
-    def get_image(self):
+    def get_image(self, shutter = None):
         cdef XI_IMG image
-        e = xiStartAcquisition(self.handle)
-        handle_error(e, "Detector.get_image().xiStartAcquisition()")
+        # t=time.time()
+        # e = xiStartAcquisition(self.handle)
+        # handle_error(e, "Detector.get_image().xiStartAcquisition()")
+        # print time.time()-t
+
         image.bp = NULL
-        image.bp_size = 0    
+        image.bp_size = 0
         e = xiGetImage(self.handle, Detector.TIMEOUT, &image)
         handle_error(e, "Detector.get_image().xiGetImage()")
+        # print time.time()-t
 
-        e = xiStopAcquisition(self.handle)
-        handle_error(e, "Detector.get_image().xiStopAcquisition()")
+        # e = xiStopAcquisition(self.handle)
+        # handle_error(e, "Detector.get_image().xiStopAcquisition()")
         #TODO: return other image parameters
+        # print time.time()-t
         return self.make_image(image)    
 
     def enable_cooling(self):
@@ -155,6 +170,9 @@ cdef class Detector:
         handle_error(e, "Detector.disable_cooling()")
 
     def __dealloc__(self):
+        e = xiStopAcquisition(self.handle)
+        handle_error(e, "Detector.__dealloc__().xiStopAcquisition()")
+
         e = xiCloseDevice(self.handle)
         handle_error(e, "Detector.__dealloc__()")
         print('DEBUG: Detector dealloc')
