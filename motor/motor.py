@@ -41,7 +41,7 @@ class Motor(object):
         status = py_get_status(self.device_id)
         return {'move_status': status['MoveSts'],
                 'speed': status['CurSpeed'],
-                'possition': status['CurPosition']}
+                'position': status['CurPosition']}
 
     def set_speed_acceleration(self, speed, accel):
         py_set_move_settings(self.device_id, speed, accel)
