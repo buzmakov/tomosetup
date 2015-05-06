@@ -6,7 +6,7 @@ import pylab as plt
 if __name__ == "__main__": 
 	d = Detector()
 	d.enable_cooling()
-	d.set_exposure(1000)
+	d.set_exposure(1*1000)
 
 	res = d.get_image()
 

@@ -124,26 +124,12 @@ cdef class Detector:
         return float(exposure_in_us) / 1000
 
     cdef make_image(self, XI_IMG image):
-        img = [[] for i in range(image.height)]
-        i = 0
-        for h in range(image.height):
-            for w in range(image.width + image.padding_x / 2):
-                if (<numpy.uint16_t *>image.bp)[i] <= 10:
-                    print(i, (<numpy.uint16_t *>image.bp)[i])
-                img[h].append((<numpy.uint16_t *>image.bp)[i])
-                i += 1
-
-        return img
-
-    cdef make_image2(self, XI_IMG image):
         number_of_pixels = (image.width + image.padding_x / 2) * image.height
         size = number_of_pixels * 2
-        img = numpy.empty(shape=(image.height, image.width+ image.padding_x / 2), dtype = 'uint16')
-        i = 0
-        for h in range(img.shape[0]):
-            for w in range(img.shape[1]):
-                img[h,w]= (<numpy.uint16_t *>image.bp)[i]
-                i = i+1    
+        cdef numpy.ndarray[numpy.uint16_t, ndim=2] img = numpy.empty(
+            shape=(image.height, image.width+ image.padding_x / 2),
+            dtype = 'uint16')
+        memcpy(<void *> img.data, image.bp, size)
         return img
 
     def get_image(self):
@@ -158,7 +144,7 @@ cdef class Detector:
         e = xiStopAcquisition(self.handle)
         handle_error(e, "Detector.get_image().xiStopAcquisition()")
         #TODO: return other image parameters
-        return self.make_image2(image)    
+        return self.make_image(image)    
 
     def enable_cooling(self):
         e = xiSetParamInt(self.handle, XI_PRM_COOLING, XI_ON)
