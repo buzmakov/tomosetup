@@ -39,7 +39,8 @@ class Motor(object):
         # TODO: add more status fields
 
         status = py_get_status(self.device_id)
-        return {'speed': status['CurSpeed'],
+        return {'move_status': status['MoveSts'],
+                'speed': status['CurSpeed'],
                 'possition': status['CurPosition']}
 
     def set_speed_acceleration(self, speed, accel):
@@ -56,10 +57,10 @@ class Motor(object):
 
     def move_to_position(self, position):
         py_command_move(self.device_id, int(position), 0)
-
+        MOVE_STATE_MOVING = 0x01
         # waiting until motor rotated
         # TODO: check accuracy of positiooning
-        while self.get_status()['speed'] != 0 or abs(self.get_position()-position)>3:
+        while self.get_status()['move_status']&MOVE_STATE_MOVING != 0:
             # print 'Current angle: {}'.format(self.get_position())
             time.sleep(0.1)
 
