@@ -13,6 +13,7 @@ class Motor(object):
         super(Motor, self).__init__()
         self.name = name
         self.device_id = py_open_device(self.name)
+        #TODO: disable borders control
 
     def get_status(self):
         """
